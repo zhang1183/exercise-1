@@ -1,0 +1,159 @@
+#导入实验所需程序包
+library(car)
+library(DMwR)
+
+#选取工作空间
+setwd("D:/Data")
+
+#读取文件
+data <- read.table(file = 'Analysis.txt', col.names = c('season','size','speed','mxPH','mnO2','Cl','NO3','NH4','oPO4','PO4','Chla','a1','a2','a3','a4','a5','a6','a7'), na.strings = c('XXXXXXX'))
+
+#显示结果
+#head(data)
+
+#将预处理后的文件存储
+
+#对标称属性，给出可能频数；对数值属性，给出最大、最小、均值、中位数、四分位数及缺失值的个数
+attributeHandle <- function()
+{	
+	#得到频数及其他的数值属性信息
+	summary(data)
+	#将得到的频数存储在文件中
+	write.table(summary(data),file="attributeData.txt",quote=FALSE,sep='\t',
+	row.names=FALSE,col.names=FALSE)
+
+}
+#绘制直方图
+drawHistogram <- function()
+{
+	#得到mxPH的直方图
+	hist(data$mxPH,probability=T)
+
+	#绘制全部直方图
+	par(mfrow=c(2,4))
+	hist(data$mxPH,probability=T)
+	hist(data$mnO2,probability=T)
+	hist(data$Cl,probability=T)
+	hist(data$NO3,probability=T)
+	hist(data$NH4,probability=T)
+	hist(data$oPO4,probability=T)
+	hist(data$PO4,probability=T)
+	hist(data$Chla,probability=T)
+
+}
+#绘制QQ图
+drawQQ <- function()
+{
+	#绘制mxPHQQ图
+	qqPlot(data$mxPH,main='Normal QQ plot of mxPH')
+	#绘制全部QQ图
+	par(mfrow=c(2,4))
+	library(car)
+	qqPlot(data$mxPH,main='Normal QQ plot of mxPH')
+	qqPlot(data$mnO2,main='Normal QQ plot of mnO2')
+	qqPlot(data$Cl,main='Normal QQ plot of Cl')
+	qqPlot(data$NO3,main='Normal QQ plot of NO3')
+	qqPlot(data$NH4,main='Normal QQ plot of NH4')
+	qqPlot(data$oPO4,main='Normal QQ plot of oPO4')
+	qqPlot(data$PO4,main='Normal QQ plot of PO4')
+	qqPlot(data$Chla,main='Normal QQ plot of Chla')
+}
+#绘制盒图
+drawBox <- function()
+{
+	#绘制所有的盒图
+	par(mfrow=c(2,4))
+	boxplot(data$mxPH,main='Box plot of mxPH')
+	rug(jitter(data$mxPH),side = 2)
+	aline(h=mean(data$mxPH,na.rm = T),lty=2)
+
+	boxplot(data$mnO2,main='Box plot of mnO2')
+	rug(jitter(data$mnO2),side = 2)
+	aline(h=mean(data$mnO2,na.rm = T),lty=2)
+
+	boxplot(data$Cl,main='Box plot of Cl')
+	rug(jitter(data$Cl),side = 2)
+	aline(h=mean(data$Cl,na.rm = T),lty=2)
+
+	boxplot(data$NO3,main='Box plot of NO3')
+	rug(jitter(data$NO3),side = 2)
+	aline(h=mean(data$NO3,na.rm = T),lty=2)
+
+	boxplot(data$NH4,main='Box plot of NH4')
+	rug(jitter(data$NH4),side = 2)
+	aline(h=mean(data$NH4,na.rm = T),lty=2)
+
+	boxplot(data$oPO4,main='Box plot of oPO4')
+	rug(jitter(data$oPO4),side = 2)
+	aline(h=mean(data$oPO4,na.rm = T),lty=2)
+
+	boxplot(data$PO4,main='Box plot of PO4')
+	rug(jitter(data$PO4),side = 2)
+	aline(h=mean(data$PO4,na.rm = T),lty=2)
+
+	boxplot(data$Chla,main='Box plot of Chla')
+	rug(jitter(data$Chla),side = 2)
+	aline(h=mean(data$Chla,na.rm = T),lty=2)
+}
+#绘制条件盒图
+drawConditionBox <- function()
+{
+	#绘制a1到a7的size条件盒图
+	library(DMwR)
+	par(new=TRUE)
+	par(mfrow=c(3,3))
+	bwplot(size~a1,data=data,ylabel='a1')
+	bwplot(size~a2,data=data,ylabel='a2')
+	bwplot(size~a3,data=data,ylabel='a3')
+	bwplot(size~a4,data=data,ylabel='a4')
+	bwplot(size~a5,data=data,ylabel='a5')
+	bwplot(size~a6,data=data,ylabel='a6')
+	bwplot(size~a7,data=data,ylabel='a7')
+	plot()
+}
+#数据缺失值处理
+dataHandle <- function()
+{
+#1,将缺失部分剔除	
+	#检查含缺失值记录的数据
+	data[!complete.cases(data),]
+	#剔除缺失值
+	data <- na.omit(data)
+	apply(data,1,function(x) sum(is.na(x)))
+	#保存预处理后的数据集
+	write.table(data,file="Analysis1.txt",quote=FALSE,sep='\t',row.names=FALSE,col.names=FALSE)
+#2,用最高频率值来填补缺失值
+	#重新选取data数据
+	data <- read.table(file = 'Analysis.txt', col.names = c('season','size','speed','mxPH','mnO2','Cl','NO3','NH4','oPO4','PO4','Chla','a1','a2','a3','a4','a5','a6','a7'), na.strings = c('XXXXXXX'))
+	#首先显示原始mxPH数据
+	data$mxPH
+	#使用中位数填补缺失值
+	data[is.na(data$mxPH),'mxPH'] <- median(data$mxPH,na.rm=T)
+	#保存预处理后的数据集
+	write.table(data,file="Analysis2.txt",quote=FALSE,sep='\t',row.names=FALSE,col.names=FALSE)
+
+#3,通过属性的相关关系来填补缺失值
+	options(digits = 1)
+	cor(data[,4:18],use="complete.obs")
+	symnum(cor(data[,4:18],use="complete.obs"))
+
+	#找到相关变量之间的线性关系
+	data(data)
+	data <- data[-manyNAs(data),]
+	lm(PO4~oPO4,data = data)
+	#保存预处理后的文件
+	write.table(data,file="Analysis3.txt",quote=FALSE,sep='\t',row.names=FALSE,col.names=FALSE)
+
+#4,通过数据对象之间的相似性来填补缺失值
+	#使用knnlmputation()函数
+	data <- data[-manyNAs(data),]
+	data <- knnImputation(data,k=10)
+	data
+	#使用中位数填补缺失值
+	data <- knnImputation(data,k=10,meth="median")
+	#保存预处理后的文件
+	write.table(data,file="Analysis3.txt",quote=FALSE,sep='\t',row.names=FALSE,col.names=FALSE)
+}
+
+
+
